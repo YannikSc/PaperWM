@@ -6,21 +6,25 @@ let originalAnimateSwitch = null;
  * switching between panes and when the focus on a monitor switch happens
  */
 function enable() {
-    originalAnimateSwitch = WorkspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch;
+    try {
+        originalAnimateSwitch = WorkspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch;
 
-    WorkspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = function (
-        _,
-        _,
-        _,
-        complete
-    ) {
-        complete();
-    };
+        WorkspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = function (
+            _,
+            _,
+            _,
+            complete
+        ) {
+            complete();
+        };
+    } catch (_) { }
 }
 
 /**
  * Re-enables the workspace animations
  */
 function disable() {
-    WorkspaceAnimation.WorkspaceAnimationController.prototyp.animateSwitch = originalAnimateSwitch;
+    if (originalAnimateSwitch) {
+        WorkspaceAnimation.WorkspaceAnimationController.prototype.animateSwitch = originalAnimateSwitch;
+    }
 }

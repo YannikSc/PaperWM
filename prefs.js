@@ -13,20 +13,22 @@ const Convenience = Extension.imports.convenience;
 const WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 
-const wmSettings = new Gio.Settings({ schema_id:
-                                    'org.gnome.desktop.wm.preferences'});
+const wmSettings = new Gio.Settings({
+    schema_id:
+        'org.gnome.desktop.wm.preferences'
+});
 
 let _ = s => s;
 
 // TreeStore model
-const COLUMN_ID          = 0;
-const COLUMN_INDEX       = 1;
+const COLUMN_ID = 0;
+const COLUMN_INDEX = 1;
 const COLUMN_DESCRIPTION = 2;
-const COLUMN_KEY         = 3;
-const COLUMN_MODS        = 4;
-const COLUMN_WARNING     = 5;
-const COLUMN_RESET       = 6;
-const COLUMN_TOOLTIP     = 7;
+const COLUMN_KEY = 3;
+const COLUMN_MODS = 4;
+const COLUMN_WARNING = 5;
+const COLUMN_RESET = 6;
+const COLUMN_TOOLTIP = 7;
 
 const Settings = Extension.imports.settings;
 let getWorkspaceSettings = Settings.getWorkspaceSettings;
@@ -48,7 +50,7 @@ function swapArrayElements(array, i, j) {
 }
 
 function ok(okValue) {
-    if(okValue[0]) {
+    if (okValue[0]) {
         return okValue[1]
     } else {
         return null
@@ -60,7 +62,7 @@ class SettingsWidget {
        selectedWorkspace: index of initially selected workspace in workspace settings tab
        selectedTab: index of initially shown tab
      */
-    constructor(selectedTab=0, selectedWorkspace=0 ) {
+    constructor(selectedTab = 0, selectedWorkspace = 0) {
         this._settings = Convenience.getSettings();
 
         this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
@@ -138,7 +140,7 @@ class SettingsWidget {
                 this._settings.set_boolean('only-scratch-in-overview', false);
                 this._settings.set_boolean('disable-scratch-in-overview', false);
             }
-                
+
         });
 
         let disableCorner = this.builder.get_object('override-hot-corner');
@@ -146,7 +148,7 @@ class SettingsWidget {
             this._settings.get_boolean('override-hot-corner');
         disableCorner.connect('state-set', (obj, state) => {
             this._settings.set_boolean('override-hot-corner',
-                                       state);
+                state);
         });
 
         let topbarFollowFocus = this.builder.get_object('topbar-follow-focus');
@@ -154,7 +156,7 @@ class SettingsWidget {
             this._settings.get_boolean('topbar-follow-focus');
         topbarFollowFocus.connect('state-set', (obj, state) => {
             this._settings.set_boolean('topbar-follow-focus',
-                                       state);
+                state);
         });
 
 
@@ -165,14 +167,14 @@ class SettingsWidget {
             this._settings.get_boolean('use-default-background');
         defaultBackgroundSwitch.connect('state-set', (obj, state) => {
             this._settings.set_boolean('use-default-background',
-                                       state);
+                state);
         });
         const backgroundPanelButton = this.builder.get_object('gnome-background-panel');
         backgroundPanelButton.connect('clicked', () => {
             GLib.spawn_async(null, ['gnome-control-center', 'background'],
-                             GLib.get_environ(),
-                             GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-                             null);
+                GLib.get_environ(),
+                GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                null);
         });
 
         let useDefault = this._settings.get_boolean('use-default-background');
@@ -193,8 +195,10 @@ class SettingsWidget {
             swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
 
         for (let i of wsIndicesSelectedFirst) {
-            let view = this.createWorkspacePage(wsSettingsByIndex[i], i);
-            workspaceStack.add_named(view, i.toString());
+            if (wsIndicesSelectedFirst[i]) {
+                let view = this.createWorkspacePage(wsSettingsByIndex[i], i);
+                workspaceStack.add_named(view, i.toString());
+            }
         }
 
         for (let i of wsIndices) {
@@ -221,37 +225,41 @@ class SettingsWidget {
 
         let searchEntry = this.builder.get_object('keybinding_search');
 
-        let windowFrame = new Gtk.Frame({label: _('Windows'),
-                                         label_xalign: 0.5});
+        let windowFrame = new Gtk.Frame({
+            label: _('Windows'),
+            label_xalign: 0.5
+        });
         let windows = createKeybindingWidget(settings, searchEntry);
-        box.add(windowFrame);
-        windowFrame.add(windows);
+        box.append(windowFrame);
+        windowFrame.set_child(windows);
 
 
         ['new-window', 'close-window', 'switch-next', 'switch-previous',
-          'switch-left', 'switch-right', 'switch-up', 'switch-down',
-          'switch-first', 'switch-last', 'live-alt-tab', 'live-alt-tab-backward',
-          'move-left', 'move-right', 'move-up', 'move-down',
-          'slurp-in', 'barf-out', 'center-horizontally',
-          'paper-toggle-fullscreen', 'toggle-maximize-width', 'resize-h-inc',
-          'resize-h-dec', 'resize-w-inc', 'resize-w-dec', 'cycle-width',
-          'cycle-height', 'take-window']
+            'switch-left', 'switch-right', 'switch-up', 'switch-down',
+            'switch-first', 'switch-last', 'live-alt-tab', 'live-alt-tab-backward',
+            'move-left', 'move-right', 'move-up', 'move-down',
+            'slurp-in', 'barf-out', 'center-horizontally',
+            'paper-toggle-fullscreen', 'toggle-maximize-width', 'resize-h-inc',
+            'resize-h-dec', 'resize-w-inc', 'resize-w-dec', 'cycle-width',
+            'cycle-height', 'take-window']
             .forEach(k => {
-            addKeybinding(windows.model.child_model, settings, k);
-        });
+                addKeybinding(windows.model.child_model, settings, k);
+            });
 
         annotateKeybindings(windows.model.child_model, settings);
 
-        let workspaceFrame = new Gtk.Frame({label: _('Workspaces'),
-                                            label_xalign: 0.5});
+        let workspaceFrame = new Gtk.Frame({
+            label: _('Workspaces'),
+            label_xalign: 0.5
+        });
         let workspaces = createKeybindingWidget(settings, searchEntry);
-        box.add(workspaceFrame);
-        workspaceFrame.add(workspaces);
+        box.append(workspaceFrame);
+        workspaceFrame.set_child(workspaces);
 
         ['previous-workspace', 'previous-workspace-backward',
-         'move-previous-workspace', 'move-previous-workspace-backward',
-         'switch-up-workspace', 'switch-down-workspace',
-         'move-up-workspace', 'move-down-workspace'
+            'move-previous-workspace', 'move-previous-workspace-backward',
+            'switch-up-workspace', 'switch-down-workspace',
+            'move-up-workspace', 'move-down-workspace'
         ]
             .forEach(k => {
                 addKeybinding(workspaces.model.child_model, settings, k);
@@ -259,32 +267,36 @@ class SettingsWidget {
 
         annotateKeybindings(workspaces.model.child_model, settings);
 
-        let monitorFrame = new Gtk.Frame({label: _('Monitors'),
-                                          label_xalign: 0.5});
+        let monitorFrame = new Gtk.Frame({
+            label: _('Monitors'),
+            label_xalign: 0.5
+        });
         let monitors = createKeybindingWidget(settings, searchEntry);
-        box.add(monitorFrame);
-        monitorFrame.add(monitors);
+        box.append(monitorFrame);
+        monitorFrame.set_child(monitors);
 
         ['switch-monitor-right',
-         'switch-monitor-left',
-         'switch-monitor-above',
-         'switch-monitor-below',
-         'move-monitor-right',
-         'move-monitor-left',
-         'move-monitor-above',
-         'move-monitor-below',
+            'switch-monitor-left',
+            'switch-monitor-above',
+            'switch-monitor-below',
+            'move-monitor-right',
+            'move-monitor-left',
+            'move-monitor-above',
+            'move-monitor-below',
         ].forEach(k => {
-                addKeybinding(monitors.model.child_model, settings, k);
-            });
+            addKeybinding(monitors.model.child_model, settings, k);
+        });
 
         annotateKeybindings(monitors.model.child_model, settings);
 
 
-        let scratchFrame = new Gtk.Frame({label: _('Scratch layer'),
-                                          label_xalign: 0.5});
+        let scratchFrame = new Gtk.Frame({
+            label: _('Scratch layer'),
+            label_xalign: 0.5
+        });
         let scratch = createKeybindingWidget(settings, searchEntry);
-        box.add(scratchFrame);
-        scratchFrame.add(scratch);
+        box.append(scratchFrame);
+        scratchFrame.set_child(scratch);
 
         ['toggle-scratch-layer', 'toggle-scratch', "toggle-scratch-window"]
             .forEach(k => {
@@ -310,28 +322,29 @@ class SettingsWidget {
             orientation: Gtk.Orientation.VERTICAL,
             can_focus: false,
         });
-        list.add(new Gtk.LevelBar());
+        list.append(new Gtk.LevelBar());
 
         let nameEntry = new Gtk.Entry();
         let colorButton = new Gtk.ColorButton();
 
-        let backgroundBox = new Gtk.Box({spacing: 32});  // same spacing as used in glade for default background
-        let background = new Gtk.FileChooserButton();
-        let clearBackground = new Gtk.Button({label: 'Clear', sensitive: settings.get_string('background') != ''});
-        let hideTopBarSwitch = new Gtk.Switch({active: !settings.get_boolean('show-top-bar')});
-        backgroundBox.add(background)
-        backgroundBox.add(clearBackground)
+        let backgroundBox = new Gtk.Box({ spacing: 32 });  // same spacing as used in glade for default background
+        let background = new Gtk.Text(); // TODO: Replace with proper file selector
+        let clearBackground = new Gtk.Button({ label: 'Clear', sensitive: settings.get_string('background') != '' });
+        let hideTopBarSwitch = new Gtk.Switch({ active: !settings.get_boolean('show-top-bar') });
+        backgroundBox.append(background)
+        backgroundBox.append(clearBackground)
 
-        let directoryChooser = new Gtk.FileChooserButton({
-            action: Gtk.FileChooserAction.SELECT_FOLDER,
-            title: 'Select workspace directory'
-        });
+        let directoryChooser = new Gtk.Text(); // TODO: Replace with proper file selector
+        //        {
+        //            action: Gtk.FileChooserAction.SELECT_FOLDER,
+        //            title: 'Select workspace directory'
+        //        }
 
-        list.add(createRow('Name', nameEntry));
-        list.add(createRow('Color', colorButton));
-        list.add(createRow('Background', backgroundBox));
-        list.add(createRow('Hide top bar', hideTopBarSwitch));
-        list.add(createRow('Directory', directoryChooser));
+        list.append(createRow('Name', nameEntry));
+        list.append(createRow('Color', colorButton));
+        list.append(createRow('Background', backgroundBox));
+        list.append(createRow('Hide top bar', hideTopBarSwitch));
+        list.append(createRow('Directory', directoryChooser));
 
         let rgba = new Gdk.RGBA();
         let color = settings.get_string('color');
@@ -343,10 +356,7 @@ class SettingsWidget {
         colorButton.set_rgba(rgba);
 
         let filename = settings.get_string('background');
-        if (filename === '')
-            background.unselect_all();
-        else
-            background.set_filename(filename);
+        background.set_text(filename);
 
         nameEntry.set_text(this.getWorkspaceName(settings, index));
 
@@ -370,17 +380,17 @@ class SettingsWidget {
             let color = colorButton.get_rgba().to_string();
             settings.set_string('color', color);
             settings.set_string('background', '');
-            background.unselect_all();
+            background.set_text('');
         });
 
-        background.connect('file-set', () => {
-            let filename = background.get_filename();
-            settings.set_string('background', filename);
-            clearBackground.sensitive = filename != '';
-        });
+        // background.connect('file-set', () => {
+        //     let filename = background.get_text();
+        //     settings.set_string('background', filename);
+        //     clearBackground.sensitive = filename != '';
+        // });
 
         clearBackground.connect('clicked', () => {
-            background.unselect_all();  // Note: does not trigger 'file-set'
+            background.set_text('');  // Note: does not trigger 'file-set'
             settings.reset('background');
             clearBackground.sensitive = settings.get_string('background') != '';
         });
@@ -389,16 +399,13 @@ class SettingsWidget {
             settings.set_boolean('show-top-bar', !state);
         });
 
-        let dir = settings.get_string('directory')
-        if (dir === '')
-            directoryChooser.unselect_all();
-        else
-            directoryChooser.set_filename(dir)
+        let dir = settings.get_string('directory');
+        directoryChooser.set_text(dir);
 
-        directoryChooser.connect('file-set', () => {
-            let dir = directoryChooser.get_filename();
-            settings.set_string('directory', dir);
-        });
+        // directoryChooser.connect('file-set', () => {
+        //     let dir = directoryChooser.get_text();
+        //     settings.set_string('directory', dir);
+        // });
 
         return list;
     }
@@ -418,27 +425,27 @@ function createRow(text, widget, signal, handler) {
     let margin = 12;
     let box = new Gtk.Box({
         margin_start: margin, margin_end: margin,
-        margin_top: margin/2, margin_bottom: margin/2,
+        margin_top: margin / 2, margin_bottom: margin / 2,
         orientation: Gtk.Orientation.HORIZONTAL
     });
     let label = new Gtk.Label({
         label: text, hexpand: true, xalign: 0
     });
 
-    box.add(label);
-    box.add(widget);
+    box.append(label);
+    box.append(widget);
 
     return box;
 }
 
 function createKeybindingWidget(settings, searchEntry) {
     let model = new Gtk.TreeStore();
-    let filteredModel = new Gtk.TreeModelFilter({child_model: model});
+    let filteredModel = new Gtk.TreeModelFilter({ child_model: model });
     filteredModel.set_visible_func(
         (model, iter) => {
             let desc = model.get_value(iter, COLUMN_DESCRIPTION);
 
-            if(ok(model.iter_parent(iter)) || desc === null) {
+            if (ok(model.iter_parent(iter)) || desc === null) {
                 return true;
             }
 
@@ -450,17 +457,17 @@ function createKeybindingWidget(settings, searchEntry) {
     );
 
     model.set_column_types(
-            [
-                // GObject.TYPE_BOOLEAN, // COLUMN_VISIBLE
-                GObject.TYPE_STRING, // COLUMN_ID
-                GObject.TYPE_INT,    // COLUMN_INDEX
-                GObject.TYPE_STRING, // COLUMN_DESCRIPTION
-                GObject.TYPE_INT,    // COLUMN_KEY
-                GObject.TYPE_INT,    // COLUMN_MODS
-                GObject.TYPE_BOOLEAN,// COLUMN_WARNING
-                GObject.TYPE_BOOLEAN,// COLUMN_RESET
-                GObject.TYPE_STRING, // COLUMN_TOOLTIP
-            ]);
+        [
+            // GObject.TYPE_BOOLEAN, // COLUMN_VISIBLE
+            GObject.TYPE_STRING, // COLUMN_ID
+            GObject.TYPE_INT,    // COLUMN_INDEX
+            GObject.TYPE_STRING, // COLUMN_DESCRIPTION
+            GObject.TYPE_INT,    // COLUMN_KEY
+            GObject.TYPE_INT,    // COLUMN_MODS
+            GObject.TYPE_BOOLEAN,// COLUMN_WARNING
+            GObject.TYPE_BOOLEAN,// COLUMN_RESET
+            GObject.TYPE_STRING, // COLUMN_TOOLTIP
+        ]);
 
     let treeView = new Gtk.TreeView();
     treeView.set_enable_search(false);
@@ -493,99 +500,99 @@ function createKeybindingWidget(settings, searchEntry) {
     accelRenderer.editable = true;
 
     accelRenderer.connect("accel-edited",
-            (accelRenderer, path, key, mods, hwCode) => {
-                let iter = ok(filteredModel.get_iter_from_string(path));
-                if(!iter)
-                    return;
+        (accelRenderer, path, key, mods, hwCode) => {
+            let iter = ok(filteredModel.get_iter_from_string(path));
+            if (!iter)
+                return;
 
-                iter = filteredModel.convert_iter_to_child_iter(iter);
+            iter = filteredModel.convert_iter_to_child_iter(iter);
 
-                // Update the UI.
-                model.set(iter, [COLUMN_KEY, COLUMN_MODS], [key, mods]);
+            // Update the UI.
+            model.set(iter, [COLUMN_KEY, COLUMN_MODS], [key, mods]);
 
-                // Update the stored setting.
-                let id = model.get_value(iter, COLUMN_ID);
-                let index = model.get_value(iter, COLUMN_INDEX);
-                let accelString = Gtk.accelerator_name(key, mods);
+            // Update the stored setting.
+            let id = model.get_value(iter, COLUMN_ID);
+            let index = model.get_value(iter, COLUMN_INDEX);
+            let accelString = Gtk.accelerator_name(key, mods);
 
-                let accels = settings.get_strv(id);
+            let accels = settings.get_strv(id);
 
-                if (index === -1) {
-                    accels.push(accelString);
-                } else {
-                    accels[index] = accelString
-                }
-                settings.set_strv(id, accels);
+            if (index === -1) {
+                accels.push(accelString);
+            } else {
+                accels[index] = accelString
+            }
+            settings.set_strv(id, accels);
 
-                let newEmptyRow = null, parent;
-                if (index === -1) {
-                    model.set_value(iter, COLUMN_INDEX, accels.length-1);
-                    model.set_value(iter, COLUMN_DESCRIPTION, "...");
+            let newEmptyRow = null, parent;
+            if (index === -1) {
+                model.set_value(iter, COLUMN_INDEX, accels.length - 1);
+                model.set_value(iter, COLUMN_DESCRIPTION, "...");
 
-                    let parent = ok(model.iter_parent(iter));
-                    newEmptyRow = model.insert_after(parent, iter);
-                } else if (index === 0 && !model.iter_has_child(iter)) {
-                    newEmptyRow = model.insert(iter, -1);
-                }
+                let parent = ok(model.iter_parent(iter));
+                newEmptyRow = model.insert_after(parent, iter);
+            } else if (index === 0 && !model.iter_has_child(iter)) {
+                newEmptyRow = model.insert(iter, -1);
+            }
 
-                if (newEmptyRow) {
-                    model.set(newEmptyRow, ...transpose([
-                        [COLUMN_ID, id],
-                        [COLUMN_INDEX, -1],
-                        [COLUMN_DESCRIPTION, "New binding"],
-                        [COLUMN_KEY, 0],
-                        [COLUMN_MODS, 0],
-                    ]));
-                }
+            if (newEmptyRow) {
+                model.set(newEmptyRow, ...transpose([
+                    [COLUMN_ID, id],
+                    [COLUMN_INDEX, -1],
+                    [COLUMN_DESCRIPTION, "New binding"],
+                    [COLUMN_KEY, 0],
+                    [COLUMN_MODS, 0],
+                ]));
+            }
 
-                annotateKeybindings(model, settings);
-            });
+            annotateKeybindings(model, settings);
+        });
 
     accelRenderer.connect("accel-cleared",
-            (accelRenderer, path) => {
-                let iter = ok(filteredModel.get_iter_from_string(path));
-                if(!iter)
-                    return;
+        (accelRenderer, path) => {
+            let iter = ok(filteredModel.get_iter_from_string(path));
+            if (!iter)
+                return;
 
-                iter = filteredModel.convert_iter_to_child_iter(iter);
+            iter = filteredModel.convert_iter_to_child_iter(iter);
 
-                let index = model.get_value(iter, COLUMN_INDEX);
+            let index = model.get_value(iter, COLUMN_INDEX);
 
-                // Update the UI.
-                model.set(iter, [COLUMN_KEY, COLUMN_MODS], [0, 0]);
+            // Update the UI.
+            model.set(iter, [COLUMN_KEY, COLUMN_MODS], [0, 0]);
 
-                if (index === -1) {
-                    // Clearing the empty row
-                    return;
-                }
+            if (index === -1) {
+                // Clearing the empty row
+                return;
+            }
 
-                let id = model.get_value(iter, COLUMN_ID);
-                let accels = settings.get_strv(id);
-                accels.splice(index, 1);
+            let id = model.get_value(iter, COLUMN_ID);
+            let accels = settings.get_strv(id);
+            accels.splice(index, 1);
 
-                let parent, nextSibling;
-                // Simply rebuild the model for this action
-                if (index === 0) {
-                    parent = iter.copy();
-                } else {
-                    parent = ok(model.iter_parent(iter));
-                }
-                nextSibling = parent.copy();
+            let parent, nextSibling;
+            // Simply rebuild the model for this action
+            if (index === 0) {
+                parent = iter.copy();
+            } else {
+                parent = ok(model.iter_parent(iter));
+            }
+            nextSibling = parent.copy();
 
-                if(!model.iter_next(nextSibling))
-                    nextSibling = null;
+            if (!model.iter_next(nextSibling))
+                nextSibling = null;
 
-                model.remove(parent);
+            model.remove(parent);
 
-                // Update the stored setting.
-                settings.set_strv(id, accels);
+            // Update the stored setting.
+            settings.set_strv(id, accels);
 
-                let recreated = addKeybinding(model, settings, id, nextSibling);
-                let selection = treeView.get_selection();
-                selection.select_iter(recreated);
+            let recreated = addKeybinding(model, settings, id, nextSibling);
+            let selection = treeView.get_selection();
+            selection.select_iter(recreated);
 
-                annotateKeybindings(model, settings);
-            });
+            annotateKeybindings(model, settings);
+        });
 
     let accelColumn = new Gtk.TreeViewColumn();
     accelColumn.pack_end(accelRenderer, false);
@@ -603,7 +610,7 @@ function createKeybindingWidget(settings, searchEntry) {
 
     resetRenderer.connect('toggled', (renderer, path) => {
         let iter = ok(filteredModel.get_iter_from_string(path));
-        if(!iter)
+        if (!iter)
             return;
         iter = filteredModel.convert_iter_to_child_iter(iter);
 
@@ -615,7 +622,7 @@ function createKeybindingWidget(settings, searchEntry) {
 
         let parent = ok(model.iter_parent(iter)) || iter.copy();
         let nextSibling = parent.copy();
-        if(!model.iter_next(nextSibling))
+        if (!model.iter_next(nextSibling))
             nextSibling = null;
 
         model.remove(parent);
@@ -634,13 +641,13 @@ function createKeybindingWidget(settings, searchEntry) {
 
 function parseAccelerator(accelerator) {
     let key, mods;
-    if (accelerator.match(/Above_Tab/)) {
-        let keymap = Gdk.Keymap.get_default();
-        let entries = keymap.get_entries_for_keycode(49)[1];
-        let keyval = keymap.lookup_key(entries[0]);
-        let name = Gtk.accelerator_name(keyval, 0);
-        accelerator = accelerator.replace('Above_Tab', name);
-    }
+    // if (accelerator.match(/Above_Tab/)) {
+    //     let keymap = Gdk.Keymap.get_default();
+    //     let entries = keymap.get_entries_for_keycode(49)[1];
+    //     let keyval = keymap.lookup_key(entries[0]);
+    //     let name = Gtk.accelerator_name(keyval, 0);
+    //     accelerator = accelerator.replace('Above_Tab', name);
+    // }
 
     [key, mods] = Gtk.accelerator_parse(accelerator);
     return [key, mods];
@@ -654,7 +661,7 @@ function transpose(colValPairs) {
     return [colKeys, values];
 }
 
-function addKeybinding(model, settings, id, position=null) {
+function addKeybinding(model, settings, id, position = null) {
     let accels = settings.get_strv(id);
 
     let schema = settings.settings_schema;
@@ -681,7 +688,7 @@ function addKeybinding(model, settings, id, position=null) {
         let subrow = model.insert(row, 0);
         model.set(subrow, ...transpose([
             [COLUMN_ID, id],
-            [COLUMN_INDEX, i+1],
+            [COLUMN_INDEX, i + 1],
             [COLUMN_DESCRIPTION, "..."],
             [COLUMN_KEY, key],
             [COLUMN_MODS, mods],
@@ -706,7 +713,7 @@ function addKeybinding(model, settings, id, position=null) {
 function annotateKeybindings(model, settings) {
     let conflicts = Settings.findConflicts();
     let warning = (id, c) => {
-        return conflicts.filter(({name, combo}) => name === id && combo === c);
+        return conflicts.filter(({ name, combo }) => name === id && combo === c);
     };
 
     model.foreach((model, path, iter) => {
@@ -729,7 +736,7 @@ function annotateKeybindings(model, settings) {
             tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
 
             model.set_value(iter, COLUMN_TOOLTIP,
-                            GLib.markup_escape_text(tooltip, -1));
+                GLib.markup_escape_text(tooltip, -1));
             model.set_value(iter, COLUMN_WARNING, true);
         } else {
             model.set_value(iter, COLUMN_WARNING, false);
@@ -750,6 +757,6 @@ function buildPrefsWidget() {
     }
     let settings = new SettingsWidget(selectedTab, selectedWorkspace || 0);
     let widget = settings.widget;
-    widget.show_all();
+    widget.show();
     return widget;
 }

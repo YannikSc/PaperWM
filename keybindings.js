@@ -659,11 +659,7 @@ function resetConflicts() {
             break;
         case  'toggle-application-view':
             // overview._controls: Backward compatibility for 3.34 and below:
-            const viewSelector = (Main.overview.viewSelector || Main.overview._controls && Main.overview._controls.viewSelector);
-
-            if (viewSelector == undefined) {
-                break;
-            }
+                const viewSelector = (Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector);
 
             Main.wm.setCustomKeybindingHandler(
                 name,
